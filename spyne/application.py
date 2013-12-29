@@ -1,4 +1,3 @@
-
 #
 # spyne - Copyright (C) Spyne contributors.
 #
@@ -23,10 +22,13 @@ component is integrated.
 """
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from spyne.model.fault import Fault
+
 from spyne.interface import Interface
+
 from spyne._base import EventManager
 
 
@@ -71,20 +73,27 @@ class Application(object):
                                                                      name=None):
 
         self.services = services
+        
         self.tns = tns
+        
         self.name = name
 
         if self.name is None:
+            
             self.name = self.__class__.__name__.split('.')[-1]
 
         self.event_manager = EventManager(self)
+        
         self.error_handler = None
 
         self.interface = Interface(self)
+        
         self.in_protocol = in_protocol
+        
         self.out_protocol = out_protocol
 
         self.in_protocol.set_app(self)
+        
         self.out_protocol.set_app(self)
 
         self.reinitialize()
@@ -101,6 +110,7 @@ class Application(object):
         try:
             # fire events
             self.event_manager.fire_event('method_call', ctx)
+            
             ctx.service_class.event_manager.fire_event('method_call', ctx)
 
             # call the method
@@ -109,7 +119,9 @@ class Application(object):
             # out object is always an iterable of return values. see
             # MethodContext docstrings for more info
             if len(ctx.descriptor.out_message._type_info) == 0:
+                
                 ctx.out_object = [None]
+                
             elif len(ctx.descriptor.out_message._type_info) == 1:
                 # otherwise, the return value should already be wrapped in an
                 # iterable.
@@ -117,28 +129,35 @@ class Application(object):
 
             # fire events
             self.event_manager.fire_event('method_return_object', ctx)
+            
             ctx.service_class.event_manager.fire_event(
                                                     'method_return_object', ctx)
 
         except Fault, e:
+            
             logger.exception(e)
 
             ctx.out_error = e
 
             # fire events
             self.event_manager.fire_event('method_exception_object', ctx)
+            
             if ctx.service_class != None:
+                
                 ctx.service_class.event_manager.fire_event(
                                                 'method_exception_object', ctx)
 
         except Exception, e:
+            
             logger.exception(e)
 
             ctx.out_error = Fault('Server', str(e))
 
             # fire events
             self.event_manager.fire_event('method_exception_object', ctx)
+            
             if ctx.service_class != None:
+                
                 ctx.service_class.event_manager.fire_event(
                                                 'method_exception_object', ctx)
 
@@ -151,14 +170,21 @@ class Application(object):
         return ctx.service_class.call_wrapper(ctx)
 
     def _has_callbacks(self):
+        
         return self.interface._has_callbacks()
 
     def reinitialize(self):
+        
         from spyne.server import ServerBase
 
         server = ServerBase(self)
+        
         aux_memo = set()
+        
         for s,d in self.interface.method_id_map.values():
+            
             if d.aux is not None and not id(d.aux) in aux_memo:
+                
                 d.aux.initialize(server)
+                
                 aux_memo.add(id(d.aux))
